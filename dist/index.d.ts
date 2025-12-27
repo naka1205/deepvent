@@ -180,6 +180,7 @@ export declare class App implements IApp {
     disaster: IDisaster;
     detection: IDetection;
     select: ISelect;
+    message: Message;
     last: string;
     state: string;
     schemeId?: string;
@@ -265,7 +266,6 @@ export declare class App implements IApp {
             label: string;
         }>;
         defaultNames?: Partial<typeof Config.DEFAULT_NAME>;
-        warnMessages?: Partial<typeof Config.WARN_MESSAGE>;
     }): void;
     setKeyConfig(data: KeyConfig): void;
 }
@@ -311,9 +311,7 @@ declare interface AppEventMap {
     batchmove: {
         active: boolean;
     };
-    message: {
-        message: string;
-    };
+    message: any;
 }
 
 /**
@@ -383,90 +381,10 @@ export declare const Config: {
         tempTunnel: string;
         nodeName: string;
     };
-    WARN_MESSAGE: {
-        resourceNotFound: string;
-        invalidEntityMissingPipeId: string;
-        entityMissingPosition: string;
-        pipeNotFoundForEntity: string;
-        dataNotInitialized: string;
-        noEntityData: string;
-        noFileSelected: string;
-        onlyDxfDwgSupported: string;
-        noLayerSpecified: string;
-        dxfNoEntities: string;
-        invalidSerializedData: string;
-        pipeAlreadyHasDuct: string;
-        addPipeFailed: string;
-        addFanFailedInvalidPipe: string;
-        addShapeFailedInvalidPipe: string;
-        addDuctFailedInvalidPipe: string;
-        fanCreateFailed: string;
-        shapeCreateFailed: string;
-        ductCreateFailed: string;
-        saveSceneFailed: string;
-        loadSceneFailed: string;
-        restoreSceneFailed: string;
-        parseDxfFailed: string;
-        parseDxfFileFailed: string;
-        parseDwgFailed: string;
-        noRampProperties: string;
-        invalidExitId: string;
-        noExitNodesFound: string;
-        mergeGeometryFailed: string;
-        cylinderTooShort: string;
-        addFanError: string;
-        addShapeError: string;
-        addSpriteFailedInvalidPipe: string;
-        addSpriteFailedCreate: string;
-        addSpriteError: string;
-        addDuctError: string;
-        unknownActionType: string;
-        executeActionError: string;
-        parsePropertiesError: string;
-        undoActionError: string;
-        spriteCreateFailed: string;
-        createFanError: string;
-        createSpriteError: string;
-        createShapeError: string;
-        curvePointsInsufficient: string;
-        processDxfEntitiesError: string;
-        batchProcessDxfError: string;
-        loadJsonError: string;
-        loadDxfError: string;
-        loadGlbError: string;
-        performanceWarning: string;
-        updateObjectError: string;
-        invalidLineEntity: string;
-        lineVertexMissingCoords: string;
-        rampVerticalRequired: string;
-        rampMissingPoints: string;
-        rampPointsInsufficient: string;
-        rampOptimizedPointsInsufficient: string;
-        rampCreateError: string;
-        rampPreviewError: string;
-        rampPreviewPointsInsufficient: string;
-        invalidDataOrEntities: string;
-        tunnelVertexIncomplete: string;
-        tunnelVertexCoordsIncomplete: string;
-        unknownSensorType: string;
-        cleanTempFanError: string;
-        cleanTempShapeError: string;
-        cleanTempSpriteError: string;
-        updateNotSupported: string;
-        deleteNotSupported: string;
-        dbOpenFailed: string;
-        sceneSaveFailed: string;
-        sceneGetFailed: string;
-        sceneGetAllFailed: string;
-        sceneDeleteFailed: string;
-        sceneClearFailed: string;
-        sceneImportFailed: string;
-        clickPipeHint: string;
-        minPointsRequired: string;
-    };
     SET_CONFIG: SetConfig;
     KEY_CONFIG: KeyConfig;
     PARAM_CONFIG: ParamConfig;
+    MESSAGE_CODES: Record<number, "info" | "warn" | "error">;
     DECIMAL_NUM: number;
     PIPE_NAME: "LINE";
     FAN_NAME: "FAN";
@@ -1530,6 +1448,7 @@ export declare interface IApp {
     outline: OutlinePass;
     controls: OrbitControls;
     listener: EventListener_2;
+    message: IMessage;
     raycaster: THREE.Raycaster;
     resizer: IResizer;
     storage: IStorage;
@@ -1899,6 +1818,16 @@ export declare interface ILoop {
     stop(): void;
     tick(): void;
     remove(object: any): boolean;
+}
+
+/**
+ * 消息处理接口
+ */
+declare interface IMessage {
+    send(code: number): void;
+    info(code: number): void;
+    warn(code: number): void;
+    error(code: number): void;
 }
 
 /**
@@ -2371,12 +2300,51 @@ export declare interface MeshWithGeometryAndMaterial extends THREE.Object3D {
 }
 
 /**
+ * Message - 消息处理类
+ * 用于统一处理异常和错误消息的触发
+ */
+export declare class Message {
+    private app;
+    constructor(app: IApp);
+    /**
+     * 发送消息
+     * @param code - 消息编码
+     */
+    send(code: number): void;
+    /**
+     * 发送信息消息
+     * @param code - 消息编码
+     */
+    info(code: number): void;
+    /**
+     * 发送警告消息
+     * @param code - 消息编码
+     */
+    warn(code: number): void;
+    /**
+     * 发送错误消息
+     * @param code - 消息编码
+     */
+    error(code: number): void;
+    /**
+     * 获取消息类型
+     * @param code - 消息编码
+     * @returns 消息类型
+     */
+    static getMessageType(code: number): 'info' | 'warn' | 'error' | undefined;
+}
+
+/**
  * 消息事件
  */
 declare interface MessageEvent_2 extends AppEvent {
     type: 'message';
-    message: string;
+    data: {
+        type: 'info' | 'warn' | 'error';
+        code: number;
+    };
 }
+export { MessageEvent_2 as MessageEvent }
 
 /**
  * 批量移动工具类 - 使用 TransformControls 批量移动选中的三维对象
@@ -3572,7 +3540,7 @@ export declare interface Vector3JSON {
     z: number;
 }
 
-export declare const VERSION = "0.1.0";
+export declare const VERSION = "1.1.1";
 
 export declare class View implements IView {
     private app;

@@ -1,6 +1,6 @@
 {
   "name": "deepvent",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "description": "A TypeScript 3D scene engine based on Three.js for ventilation simulation",
   "type": "module",
   "main": "./dist/index.cjs",
