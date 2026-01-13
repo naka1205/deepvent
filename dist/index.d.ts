@@ -185,6 +185,7 @@ export declare class App implements IApp {
     state: string;
     schemeId?: string;
     schemeState?: boolean;
+    wasmPath?: string;
     innerWidth: number;
     innerHeight: number;
     grid: IGridHelper;
@@ -328,12 +329,14 @@ export declare interface AppOptions {
     paramConfig?: Partial<ParamConfig>;
     /** 方案 ID */
     schemeId?: string;
-    /** 方案状态（是否已发布） */
+    /** 方案状态 */
     schemeState?: boolean;
     /** 比例尺 */
     scale?: number;
     /** 配置 */
     localeConfig?: LocaleConfig;
+    /** WASM 文件路径 */
+    wasmPath?: string;
 }
 
 /**
@@ -362,7 +365,7 @@ export declare const Config: {
         value: string;
         label: string;
     }[];
-    visibleEntities: string[];
+    VISIBLE_ENTITIES: string[];
     DEFAULT_NAME: {
         groupName: string;
         sceneName: string;
@@ -400,6 +403,7 @@ export declare const Config: {
     EXIT_NAME: "EXIT";
     WINDSENSOR_NAME: "WINDSENSOR";
     STATION_NAME: "STATION";
+    WASM_PATH: string;
     IMGS: {
         /** background 纹理 */
         background: string;
@@ -622,7 +626,7 @@ export declare interface DwgEntity {
     color: number;
     colorIndex: number;
     colorName: string;
-    endPoint: {
+    endPoint?: {
         x: number;
         y: number;
         z: number;
@@ -639,7 +643,7 @@ export declare interface DwgEntity {
     lineTypeScale: number;
     lineweight: number;
     ownerBlockRecordSoftId: number;
-    startPoint: {
+    startPoint?: {
         x: number;
         y: number;
         z: number;
@@ -647,6 +651,16 @@ export declare interface DwgEntity {
     thickness: number;
     transparency: number;
     type: string;
+    /** POLYLINE 顶点数组 */
+    vertices?: Array<{
+        x: number;
+        y: number;
+        z?: number;
+    }>;
+    /** LWPOLYLINE 高程值 */
+    elevation?: number;
+    /** 闭合标志 (1 = 闭合) */
+    flag?: number;
 }
 
 /**
@@ -1122,7 +1136,7 @@ export declare interface FanJSON {
     pipeId: string;
     nodeId: string;
     groupId: string;
-    position: Vector3JSON;
+    position: Position;
     relativePosition: number;
     velocity: number;
     pressure: number;
@@ -1608,10 +1622,10 @@ export declare interface IDuct {
  * DWG管理器接口
  */
 export declare interface IDwgManager {
-    initialize(): Promise<void>;
+    initialize(wasmPath?: string): Promise<void>;
     parseDwg(fileContent: ArrayBuffer): Promise<any>;
     loadFromFile(file: File): Promise<any>;
-    parseDwgData(entities: DwgEntity[], properties: Properties): void;
+    parseDwgData(entities: DwgEntity[], properties: PanelData): void;
 }
 
 /**
@@ -2251,8 +2265,6 @@ declare interface LocaleConfig {
     entityOptions?: EntityOptionConfig[];
     /** 默认名称 */
     defaultNames?: DefaultNameConfig;
-    /** 警告信息 */
-    warnMessages?: WarnMessageConfig;
 }
 
 /**
@@ -2701,7 +2713,7 @@ export declare interface PipeJSON {
     startLinkId?: string;
     endLinkId?: string;
     colorIndex: number;
-    vertices: Vector3JSON[];
+    vertices: Position[];
     size?: number;
     width?: number;
     height?: number;
@@ -2762,7 +2774,7 @@ export declare interface PointJSON {
     id: string;
     type: string;
     name: string;
-    position: Vector3JSON;
+    position: Position;
 }
 
 export declare class Pollution implements Updatable {
@@ -3210,7 +3222,7 @@ export declare interface ShapeJSON {
     pipeId: string;
     nodeId: string;
     groupId: string;
-    position: Vector3JSON;
+    position: Position;
     relativePosition: number;
     direction: string;
     sensors: string[];
@@ -3316,7 +3328,7 @@ export declare interface SpriteJSON {
     pipeId: string;
     nodeId: string;
     groupId: string;
-    position: Vector3JSON;
+    position: Position;
     relativePosition: number;
     direction: string;
 }
@@ -3531,16 +3543,7 @@ export declare interface UpdateEvent extends AppEvent {
     object: object | null;
 }
 
-/**
- * 3D向量JSON表示
- */
-export declare interface Vector3JSON {
-    x: number;
-    y: number;
-    z: number;
-}
-
-export declare const VERSION = "1.1.1";
+export declare const VERSION = "1.1.2";
 
 export declare class View implements IView {
     private app;
@@ -3593,13 +3596,6 @@ export declare class View implements IView {
 export declare interface VisibilityEvent extends AppEvent {
     type: 'visibility';
     visible: boolean;
-}
-
-/**
- * 警告信息配置
- */
-declare interface WarnMessageConfig {
-    [key: string]: string;
 }
 
 export { }
